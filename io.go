@@ -4,9 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
 	"sync"
+
+	"github.com/rs/zerolog/log"
 )
 
 // FileHandler covers the operations that os.File provides but that we need to be
@@ -122,7 +123,7 @@ func (odf *OnDiskFile) Close() error { return odf.fd.Close() }
 func (odf *OnDiskFile) Size() int64 {
 	info, err := odf.fd.Stat()
 	if err != nil {
-		slog.Error("failed to stat file")
+		log.Error().Msg("couldn't stat file")
 		return 0
 	}
 	return info.Size()
