@@ -2,13 +2,56 @@ package bpTree
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-// todo: write disk manager tests as well
+func TestDiskManager_ReadWrite(t *testing.T) {
+	pageSizes := []int{4, 8, 16}
+	maxPages := 10
+
+	for _, pageSize := range pageSizes {
+		t.Run(fmt.Sprintf("pageSize=%d", pageSize), func(t *testing.T) {
+			dm := NewDiskManager(NewMemFile(), pageSize)
+			for i := uint32(0); i < uint32(maxPages); i++ {
+				var (
+					want = bytes.Repeat([]byte{byte(i + 1)}, pageSize)
+					got  = make([]byte, pageSize)
+				)
+				err := dm.WritePage(i, want)
+				require.NoError(t, err)
+
+				err = dm.ReadPage(i, got)
+				require.NoError(t, err)
+
+				require.Equal(t, want, got)
+			}
+		})
+	}
+}
+
+func TestDiskManager_UnwrittenPageReturnsZero(t *testing.T) {
+	dm := NewDiskManager(NewMemFile(), 8)
+
+	buf := bytes.Repeat([]byte{0xFF}, 8)
+
+	err := dm.ReadPage(5, buf)
+	require.NoError(t, err)
+	require.Equal(t, make([]byte, 8), buf)
+}
+
+func TestDiskManager_WrongBufSizeErr(t *testing.T) {
+	dm := NewDiskManager(NewMemFile(), 16)
+
+	writeErr := dm.WritePage(0, make([]byte, 15))
+	require.Error(t, writeErr)
+
+	readErr := dm.ReadPage(0, make([]byte, 15))
+	require.Error(t, readErr)
+}
 
 func TestMemIO_ReadWrite(t *testing.T) {
 	buf := make([]byte, 0)

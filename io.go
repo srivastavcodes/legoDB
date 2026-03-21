@@ -85,42 +85,42 @@ func (dm *DiskManager) WritePage(pageNum uint32, buf []byte) error {
 // Sync flushes any OS-buffered writes to durable storage.
 func (dm *DiskManager) Sync() error { return dm.store.Sync() }
 
-// OnDiskFile is a separate type just to add the Size() method directly to the disk
+// OSFile is a separate type just to add the Size() method directly to the disk
 // operations and satisfy the interface FileHandler. Otherwise, you would have to
 // call fd.Stat() every time you needed the size, this simplifies that, other than
 // that, it's just a file.
-type OnDiskFile struct {
+type OSFile struct {
 	fd *os.File
 }
 
 // OpenFile opens the file for read/write and creates one if not exist with the
-// provided name. It returns a pointer to an initialized OnDiskFile or an error
+// provided name. It returns a pointer to an initialized OSFile or an error
 // if the file could not be opened.
-func OpenFile(name string) (*OnDiskFile, error) {
+func OpenFile(name string) (*OSFile, error) {
 	fd, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE, 0o666)
 	if err != nil {
 		return nil, err
 	}
-	return &OnDiskFile{fd: fd}, nil
+	return &OSFile{fd: fd}, nil
 }
 
-func (odf *OnDiskFile) ReadAt(buf []byte, off int64) (int, error) {
+func (odf *OSFile) ReadAt(buf []byte, off int64) (int, error) {
 	return odf.fd.ReadAt(buf, off)
 }
 
-func (odf *OnDiskFile) WriteAt(buf []byte, off int64) (int, error) {
+func (odf *OSFile) WriteAt(buf []byte, off int64) (int, error) {
 	return odf.fd.WriteAt(buf, off)
 }
 
-func (odf *OnDiskFile) Sync() error { return odf.fd.Sync() }
+func (odf *OSFile) Sync() error { return odf.fd.Sync() }
 
-func (odf *OnDiskFile) Truncate(size int64) error {
+func (odf *OSFile) Truncate(size int64) error {
 	return odf.fd.Truncate(size)
 }
 
-func (odf *OnDiskFile) Close() error { return odf.fd.Close() }
+func (odf *OSFile) Close() error { return odf.fd.Close() }
 
-func (odf *OnDiskFile) Size() int64 {
+func (odf *OSFile) Size() int64 {
 	info, err := odf.fd.Stat()
 	if err != nil {
 		log.Error().Msg("couldn't stat file")
