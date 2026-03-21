@@ -1,4 +1,4 @@
-module bpTree
+module github.com/srivastavcodes/legodb
 
 go 1.26
 

@@ -1,4 +1,4 @@
-package bpTree
+package storage
 
 import (
 	"bytes"
